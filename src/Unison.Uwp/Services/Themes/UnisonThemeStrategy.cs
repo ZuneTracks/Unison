@@ -58,6 +58,57 @@ namespace Unison.Uwp.Services.Themes
             }
         }
 
+        private static object GetStatusBar()
+        {
+            var type = Type.GetType("Windows.UI.ViewManagement.StatusBar, Windows");
+            if (type == null)
+            {
+                return null;
+            }
+
+            var getter = type.GetMethod("GetForCurrentView", Type.EmptyTypes);
+            return getter == null ? null : getter.Invoke(null, null);
+        }
+
+        private static object GetProgressIndicator(object statusBar)
+        {
+            return statusBar?.GetType().GetProperty("ProgressIndicator")?.GetValue(statusBar);
+        }
+
+        private static void SetPropertyValue(object instance, string propertyName, object value)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            var property = instance.GetType().GetProperty(propertyName);
+            if (property != null && property.CanWrite)
+            {
+                property.SetValue(instance, value);
+            }
+        }
+
+        private static async Task InvokeAsync(object instance, string methodName)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            var method = instance.GetType().GetMethod(methodName, Type.EmptyTypes);
+            if (method == null)
+            {
+                return;
+            }
+
+            dynamic result = method.Invoke(instance, null);
+            if (result != null)
+            {
+                await result;
+            }
+        }
+
         public override async Task SetMobileStatusBarAsync()
         {
             try
@@ -67,29 +118,40 @@ namespace Unison.Uwp.Services.Themes
                     return;
                 }
 
-                var statusBar = StatusBar.GetForCurrentView();
+                var statusBar = GetStatusBar();
+                if (statusBar == null)
+                {
+                    return;
+                }
+
                 var orientation = DisplayInformation.GetForCurrentView().CurrentOrientation;
                 bool portrait =
                     orientation == DisplayOrientations.Portrait ||
                     orientation == DisplayOrientations.PortraitFlipped;
 
+                var progressIndicator = GetProgressIndicator(statusBar);
                 if (!portrait)
                 {
-                    try { await statusBar.ProgressIndicator.HideAsync(); } catch { }
-                    await statusBar.HideAsync();
+                    try { if (progressIndicator != null) await InvokeAsync(progressIndicator, "HideAsync"); } catch { }
+                    await InvokeAsync(statusBar, "HideAsync");
                     return;
                 }
 
-                statusBar.BackgroundColor = BrandGreen;
-                statusBar.ForegroundColor = BrandWhite;
-                statusBar.BackgroundOpacity = 1.0;
+                SetPropertyValue(statusBar, "BackgroundColor", BrandGreen);
+                SetPropertyValue(statusBar, "ForegroundColor", BrandWhite);
+                SetPropertyValue(statusBar, "BackgroundOpacity", 1.0);
 
-                await statusBar.ShowAsync();
+                await InvokeAsync(statusBar, "ShowAsync");
+
+                if (progressIndicator == null)
+                {
+                    return;
+                }
 
                 // ProgressValue = 0 → label without indeterminate spinner.
-                statusBar.ProgressIndicator.Text = "Unison";
-                statusBar.ProgressIndicator.ProgressValue = 0;
-                await statusBar.ProgressIndicator.ShowAsync();
+                SetPropertyValue(progressIndicator, "Text", "Unison");
+                SetPropertyValue(progressIndicator, "ProgressValue", 0);
+                await InvokeAsync(progressIndicator, "ShowAsync");
             }
             catch (Exception ex)
             {

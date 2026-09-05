@@ -337,6 +337,20 @@ namespace Unison.Uwp.Services
                 " reason=" + (reason ?? string.Empty));
         }
 
+        private static bool HasFlagValue(object flagsValue, string flagName)
+        {
+            if (flagsValue == null)
+            {
+                return false;
+            }
+
+            var enumType = flagsValue.GetType();
+            var flag = Enum.Parse(enumType, flagName);
+            long flagsBits = Convert.ToInt64(flagsValue);
+            long flagBits = Convert.ToInt64(flag);
+            return (flagsBits & flagBits) == flagBits;
+        }
+
         private bool TrySetAudioEndpoint(bool speakerphone, string reason)
         {
             try
@@ -346,35 +360,56 @@ namespace Unison.Uwp.Services
                     return false;
                 }
 
-                var manager = Windows.Phone.Media.Devices.AudioRoutingManager.GetDefault();
+                var managerType = Type.GetType("Windows.Phone.Media.Devices.AudioRoutingManager, Windows");
+                if (managerType == null)
+                {
+                    return false;
+                }
+
+                var getDefault = managerType.GetMethod("GetDefault", Type.EmptyTypes);
+                var manager = getDefault == null ? null : getDefault.Invoke(null, null);
                 if (manager == null)
                 {
                     return false;
                 }
 
-                var available = manager.AvailableAudioEndpoints;
-                var endpoint = speakerphone
-                    ? Windows.Phone.Media.Devices.AudioRoutingEndpoint.Speakerphone
-                    : Windows.Phone.Media.Devices.AudioRoutingEndpoint.Earpiece;
+                var availableProperty = managerType.GetProperty("AvailableAudioEndpoints");
+                var available = availableProperty == null ? null : availableProperty.GetValue(manager);
+                if (available == null)
+                {
+                    return false;
+                }
+
+                var endpointType = Type.GetType("Windows.Phone.Media.Devices.AudioRoutingEndpoint, Windows");
+                if (endpointType == null)
+                {
+                    return false;
+                }
+
+                var endpointValue = Enum.Parse(endpointType, speakerphone ? "Speakerphone" : "Earpiece");
 
                 // Bail if the endpoint is not currently available (wired headset, etc.).
-                if (speakerphone &&
-                    (available & Windows.Phone.Media.Devices.AvailableAudioRoutingEndpoints.Speakerphone) == 0)
+                if (speakerphone && !HasFlagValue(available, "Speakerphone"))
                 {
                     Debug.WriteLine("[VoicePlaybackRouting] Speakerphone unavailable (" + reason + ")");
                     return false;
                 }
 
-                if (!speakerphone &&
-                    (available & Windows.Phone.Media.Devices.AvailableAudioRoutingEndpoints.Earpiece) == 0)
+                if (!speakerphone && !HasFlagValue(available, "Earpiece"))
                 {
                     Debug.WriteLine("[VoicePlaybackRouting] Earpiece unavailable (" + reason + ")");
                     return false;
                 }
 
-                manager.SetAudioEndpoint(endpoint);
+                var setMethod = managerType.GetMethod("SetAudioEndpoint", new[] { endpointType });
+                if (setMethod == null)
+                {
+                    return false;
+                }
+
+                setMethod.Invoke(manager, new[] { endpointValue });
                 Debug.WriteLine(
-                    "[VoicePlaybackRouting] SetAudioEndpoint " + endpoint +
+                    "[VoicePlaybackRouting] SetAudioEndpoint " + endpointValue +
                     " available=" + available + " reason=" + (reason ?? string.Empty));
                 return true;
             }

@@ -87,7 +87,7 @@
                                 <FontIcon FontSize="16" FontFamily="{StaticResource IconFont}"
                                           Glyph="&#xE72B;"/>
                             </Button>
-                            <TextBlock x:Uid="Settings_Title" Text="Configurações"
+                            <TextBlock x:Uid="Settings_Title" Text="Settings"
                                        FontWeight="SemiBold" Margin="5,0,0,0" FontSize="20"
                                        VerticalAlignment="Center"
                                        Foreground="{ThemeResource SettingsHeroForegroundBrush}"
@@ -165,14 +165,14 @@
                                 Padding="15,12,15,30"
                                 Background="{ThemeResource SettingsPageBackgroundBrush}">
                         <controls:SettingsSectionHeader Glyph="&#xE713;"
-                                                        Title="Geral"
+                                                       Title="General"
                                                         LocalizationUid="Settings_General"
                                                         Margin="5,12,0,5"/>
 
                         <controls:SettingBox LocalizationUid="Settings_Notifications"
                                              Margin="5"
-                                             Header="Notificações"
-                                             Text="Exibir toasts e badge ao receber mensagens.">
+                                             Header="Notifications"
+                                             Text="Show toasts and badge for incoming messages.">
                             <controls:SettingBox.Control>
                                 <ToggleSwitch OnContent="" OffContent="" MinWidth="0" Margin="0"
                                               IsOn="{Binding NotificationsEnabled, Mode=TwoWay}"/>
@@ -182,7 +182,7 @@
                         <controls:SettingBox LocalizationUid="Settings_LiveTiles"
                                              Margin="5"
                                              Header="Live Tiles"
-                                             Text="Atualizar o tile principal com a última mensagem.">
+                                             Text="Update the primary tile with the latest message.">
                             <controls:SettingBox.Control>
                                 <ToggleSwitch OnContent="" OffContent="" MinWidth="0" Margin="0"
                                               IsOn="{Binding LiveTilesEnabled, Mode=TwoWay}"/>
@@ -191,8 +191,8 @@
 
                         <controls:SettingBox LocalizationUid="Settings_AutoUnlink"
                                              Margin="5"
-                                             Header="Desvincular automaticamente"
-                                             Text="Se a sessão for invalidada no telemóvel, limpar dados locais e pedir QR. Desligue para manter o app como backup e só tentar reconectar.">
+                                             Header="Auto-unlink on logout"
+                                             Text="If the phone invalidates this session, clear local data and show the QR. Turn off to keep the app as a backup and only retry reconnecting.">
                             <controls:SettingBox.Control>
                                 <ToggleSwitch OnContent="" OffContent="" MinWidth="0" Margin="0"
                                               IsOn="{Binding AutoUnlinkOnLogoutEnabled, Mode=TwoWay}"/>
@@ -200,13 +200,13 @@
                         </controls:SettingBox>
 
                         <controls:SettingsSectionHeader Glyph="&#xE790;"
-                                                        Title="Personalização"
+                                                        Title="Customization"
                                                         LocalizationUid="Settings_Customization"/>
 
                         <controls:SettingBox LocalizationUid="Settings_Language"
                                              Margin="5"
-                                             Header="Idioma"
-                                             Text="Escolha o idioma do aplicativo. O app reinicia para aplicar.">
+                                             Header="Language"
+                                             Text="Choose the app language. The app restarts to apply it.">
                             <controls:SettingBox.Control>
                                 <ComboBox x:Name="LanguageComboBox"
                                           MinWidth="160"
@@ -220,7 +220,7 @@
                         <controls:SettingBox LocalizationUid="Settings_Shell"
                                              Margin="5"
                                              Header="Shell"
-                                             Text="Escolha o visual do aplicativo.">
+                                             Text="Choose the app look and feel.">
                             <controls:SettingBox.Control>
                                 <ComboBox x:Name="ShellComboBox"
                                           MinWidth="140"
@@ -245,8 +245,8 @@
 
                         <controls:SettingBox LocalizationUid="Settings_KeepAlive"
                                              Margin="5"
-                                             Header="Modo em segundo plano"
-                                             Text="Usa geolocalização só para o sistema não congelar o app (Unogram). A posição não é lida nem enviada. Consome mais bateria.">
+                                             Header="Background mode"
+                                             Text="Uses location only so Windows 10 Mobile won’t freeze the app (Unogram trick). Position is not read or sent. Uses more battery.">
                             <controls:SettingBox.Control>
                                 <ToggleSwitch OnContent="" OffContent="" MinWidth="0" Margin="0"
                                               IsOn="{Binding LocationKeepAliveEnabled, Mode=TwoWay}"/>
@@ -266,7 +266,7 @@
                                           Margin="0,0,8,0"
                                           VerticalAlignment="Center"/>
                                 <TextBlock x:Uid="Settings_Disconnect"
-                                           Text="Desconectar"
+                                           Text="Disconnect"
                                            FontSize="15"
                                            Foreground="#E81123"
                                            VerticalAlignment="Center"
@@ -306,7 +306,7 @@
                     <FontIcon FontSize="16" FontWeight="ExtraBold" FontFamily="{StaticResource IconFont}"
                               Glyph="&#xE72B;"/>
                 </Button>
-                <TextBlock x:Uid="Settings_Title" Text="Configurações"
+                <TextBlock x:Uid="Settings_Title" Text="Settings"
                            FontWeight="SemiBold" Margin="5,0,0,0" FontSize="18"
                            VerticalAlignment="Center"
                            Foreground="{ThemeResource WhatsAppTextHighBrush}"

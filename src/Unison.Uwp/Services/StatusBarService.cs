@@ -4,7 +4,6 @@ using Unison.Core.Contracts;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Display;
 using Windows.UI;
-using Windows.UI.ViewManagement;
 
 namespace Unison.Uwp.Services
 {
@@ -27,6 +26,57 @@ namespace Unison.Uwp.Services
         public bool IsAvailable =>
             ApiInformation.IsTypePresent("Windows.UI.ViewManagement.StatusBar");
 
+        private static object GetStatusBar()
+        {
+            var type = Type.GetType("Windows.UI.ViewManagement.StatusBar, Windows");
+            if (type == null)
+            {
+                return null;
+            }
+
+            var getter = type.GetMethod("GetForCurrentView", Type.EmptyTypes);
+            return getter == null ? null : getter.Invoke(null, null);
+        }
+
+        private static object GetStatusBarProgressIndicator(object statusBar)
+        {
+            return statusBar?.GetType().GetProperty("ProgressIndicator")?.GetValue(statusBar);
+        }
+
+        private static void SetPropertyValue(object instance, string propertyName, object value)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            var property = instance.GetType().GetProperty(propertyName);
+            if (property != null && property.CanWrite)
+            {
+                property.SetValue(instance, value);
+            }
+        }
+
+        private static async Task InvokeAsync(object instance, string methodName)
+        {
+            if (instance == null)
+            {
+                return;
+            }
+
+            var method = instance.GetType().GetMethod(methodName, Type.EmptyTypes);
+            if (method == null)
+            {
+                return;
+            }
+
+            dynamic result = method.Invoke(instance, null);
+            if (result != null)
+            {
+                await result;
+            }
+        }
+
         public async Task ShowProgressAsync(string text)
         {
             if (!IsAvailable || _theme == null || !_theme.UsesMobileStatusBarProgress)
@@ -42,16 +92,27 @@ namespace Unison.Uwp.Services
                     return;
                 }
 
-                var statusBar = StatusBar.GetForCurrentView();
-                statusBar.BackgroundColor = BrandGreen;
-                statusBar.ForegroundColor = BrandWhite;
-                statusBar.BackgroundOpacity = 1.0;
-                await statusBar.ShowAsync();
+                var statusBar = GetStatusBar();
+                if (statusBar == null)
+                {
+                    return;
+                }
+
+                SetPropertyValue(statusBar, "BackgroundColor", BrandGreen);
+                SetPropertyValue(statusBar, "ForegroundColor", BrandWhite);
+                SetPropertyValue(statusBar, "BackgroundOpacity", 1.0);
+                await InvokeAsync(statusBar, "ShowAsync");
+
+                var progressIndicator = GetStatusBarProgressIndicator(statusBar);
+                if (progressIndicator == null)
+                {
+                    return;
+                }
 
                 // null ProgressValue → indeterminate "..." indicator + label.
-                statusBar.ProgressIndicator.Text = text ?? string.Empty;
-                statusBar.ProgressIndicator.ProgressValue = null;
-                await statusBar.ProgressIndicator.ShowAsync();
+                SetPropertyValue(progressIndicator, "Text", text ?? string.Empty);
+                SetPropertyValue(progressIndicator, "ProgressValue", null);
+                await InvokeAsync(progressIndicator, "ShowAsync");
             }
             catch (Exception ex)
             {
@@ -68,23 +129,36 @@ namespace Unison.Uwp.Services
 
             try
             {
-                var statusBar = StatusBar.GetForCurrentView();
-                try { await statusBar.ProgressIndicator.HideAsync(); } catch { }
+                var statusBar = GetStatusBar();
+                if (statusBar == null)
+                {
+                    return;
+                }
+
+                var progressIndicator = GetStatusBarProgressIndicator(statusBar);
+                if (progressIndicator != null)
+                {
+                    try { await InvokeAsync(progressIndicator, "HideAsync"); } catch { }
+                }
 
                 if (!IsPortrait())
                 {
-                    await statusBar.HideAsync();
+                    await InvokeAsync(statusBar, "HideAsync");
                     return;
                 }
 
                 // Restore brand label without spinner (same as Unison chrome).
-                statusBar.BackgroundColor = BrandGreen;
-                statusBar.ForegroundColor = BrandWhite;
-                statusBar.BackgroundOpacity = 1.0;
-                await statusBar.ShowAsync();
-                statusBar.ProgressIndicator.Text = "Unison";
-                statusBar.ProgressIndicator.ProgressValue = 0;
-                await statusBar.ProgressIndicator.ShowAsync();
+                SetPropertyValue(statusBar, "BackgroundColor", BrandGreen);
+                SetPropertyValue(statusBar, "ForegroundColor", BrandWhite);
+                SetPropertyValue(statusBar, "BackgroundOpacity", 1.0);
+                await InvokeAsync(statusBar, "ShowAsync");
+
+                if (progressIndicator != null)
+                {
+                    SetPropertyValue(progressIndicator, "Text", "Unison");
+                    SetPropertyValue(progressIndicator, "ProgressValue", 0);
+                    await InvokeAsync(progressIndicator, "ShowAsync");
+                }
             }
             catch (Exception ex)
             {

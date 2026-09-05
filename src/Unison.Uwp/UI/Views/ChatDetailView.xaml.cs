@@ -2210,13 +2210,13 @@ namespace Unison.Uwp.UI.Views
             var flyout = new MenuFlyout();
             if (message.IsPinned)
             {
-                AddPinAction(flyout, vm, "Desafixar mensagem", false, 0);
+                AddPinAction(flyout, vm, LocalizedStrings.Get("ChatDetail_UnpinMessage.Text", "Unpin message"), false, 0);
             }
             else
             {
-                AddPinAction(flyout, vm, "Fixar por 24 horas", true, 86400);
-                AddPinAction(flyout, vm, "Fixar por 7 dias", true, 604800);
-                AddPinAction(flyout, vm, "Fixar por 30 dias", true, 2592000);
+                AddPinAction(flyout, vm, LocalizedStrings.Get("ChatDetail_PinFor24Hours.Text", "Pin for 24 hours"), true, 86400);
+                AddPinAction(flyout, vm, LocalizedStrings.Get("ChatDetail_PinFor7Days.Text", "Pin for 7 days"), true, 604800);
+                AddPinAction(flyout, vm, LocalizedStrings.Get("ChatDetail_PinFor30Days.Text", "Pin for 30 days"), true, 2592000);
             }
             // The one-argument FlyoutBase.ShowAt overload requires Windows 10 1809.
             // Windows 10 Mobile 15063 supports the original MenuFlyout overload.

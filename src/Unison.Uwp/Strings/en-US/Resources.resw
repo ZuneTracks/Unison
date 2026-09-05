@@ -775,6 +775,18 @@ chat</value>
   <data name="ChatDetail_MuteNotifications.Text" xml:space="preserve">
     <value>Mute notifications</value>
   </data>
+  <data name="ChatDetail_UnpinMessage.Text" xml:space="preserve">
+    <value>Unpin message</value>
+  </data>
+  <data name="ChatDetail_PinFor24Hours.Text" xml:space="preserve">
+    <value>Pin for 24 hours</value>
+  </data>
+  <data name="ChatDetail_PinFor7Days.Text" xml:space="preserve">
+    <value>Pin for 7 days</value>
+  </data>
+  <data name="ChatDetail_PinFor30Days.Text" xml:space="preserve">
+    <value>Pin for 30 days</value>
+  </data>
   <data name="ChatDetailInfo_UnpinAppBarLabel" xml:space="preserve">
     <value>Unpin from
 Start</value>
