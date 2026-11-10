@@ -95,6 +95,13 @@ namespace Unison.Core.State
         private List<ChatItem> _sweepDirty;
         private List<string> _sweepWarm;
 
+        private readonly ISessionLogger _sessionLog;
+
+        // Per-sweep tallies for the one summary line in FinishSweep. Plain ints on the sweep
+        // thread — no allocation and no formatting on the per-row path.
+        private int _sweepNamed;
+        private int _sweepNumbered;
+
         public ChatAuthorProjection(
             IChatStateStore chatState,
             IPersonStore personStore,
@@ -104,7 +111,8 @@ namespace Unison.Core.State
             IContactService contacts = null,
             IChatService chats = null,
             ChatTimelineLoadPriorityGate timelinePriority = null,
-            Func<bool> preferFrugalUi = null)
+            Func<bool> preferFrugalUi = null,
+            ISessionLogger sessionLog = null)
         {
             _chatState = chatState ?? throw new ArgumentNullException(nameof(chatState));
             _personStore = personStore ?? throw new ArgumentNullException(nameof(personStore));
@@ -114,6 +122,7 @@ namespace Unison.Core.State
             _chats = chats;
             _timelinePriority = timelinePriority;
             _preferFrugalUi = preferFrugalUi;
+            _sessionLog = sessionLog;
             _participants = new ParticipantResolutionContext(jids, contacts, chatState, personStore);
 
             if (_timelinePriority != null)
@@ -758,12 +767,26 @@ namespace Unison.Core.State
         {
             List<ChatItem> dirtyStrips = _sweepDirty;
             List<string> needsStoreLookup = _sweepWarm;
+            int named = _sweepNamed;
+            int numbered = _sweepNumbered;
+            _sweepNamed = 0;
+            _sweepNumbered = 0;
             _sweepWork = null;
             _sweepDirectNames = null;
             _sweepSelfLabel = null;
             _sweepDirty = null;
             _sweepWarm = null;
             _sweepIndex = 0;
+
+            // One line per sweep, only when a row fell back to digits — the author strip had no
+            // diagnostics at all, so a device test could only infer why a name was missing.
+            if (numbered > 0 && _sessionLog != null)
+            {
+                _sessionLog.WriteAlways(
+                    "[AuthorStrip] sweep named=" + named +
+                    " number=" + numbered +
+                    " warm=" + (needsStoreLookup == null ? 0 : needsStoreLookup.Count));
+            }
 
             if (dirtyStrips != null && _chats != null)
             {
@@ -879,12 +902,14 @@ namespace Unison.Core.State
                 !string.IsNullOrEmpty(number)))
             {
                 case ChatAuthorStripAction.ShowName:
+                    _sweepNamed++;
                     ApplyStrip(chat, participant, canonical, resolved, selfLabel);
                     break;
 
                 case ChatAuthorStripAction.ShowNumber:
                     // The number goes in the strip but not in the sender-name slot: it is a
                     // stand-in, and leaving that slot empty keeps the next sweep looking.
+                    _sweepNumbered++;
                     ApplyStrip(chat, participant, canonical, null, selfLabel);
                     break;
             }
